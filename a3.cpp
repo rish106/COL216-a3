@@ -49,6 +49,7 @@ vector<vector<pair<bool,ll>>> L2Tag;
 
 ll L1ReadHit=0,L1ReadMiss=0,L2ReadHit=0,L2ReadMiss=0;
 ll L1WriteHit=0,L1WriteMiss=0,L2WriteHit=0,L2WriteMiss=0;
+ll WriteBackFromL1=0,WriteBackFromL2=0;
 ll L1update=0,L2update=0;
 ll MemoryRead=0,MemoryWrite=0;
 
@@ -188,6 +189,7 @@ void AddL2(ll memoryblock)
         if(evicted.first == true)
         {
             //dirty bit is on
+            WriteBackFromL2=WriteBackFromL2+1;
             ll evicted_memoryblock=L2Sets*evicted.second+index;
             WriteMemory(evicted_memoryblock);
         }
@@ -282,6 +284,7 @@ void AddL1(ll memoryblock)
         if(evicted.first == true)
         {
             //dirty bit is on
+            WriteBackFromL1=WriteBackFromL1+1;
             ll evicted_memoryblock=L1Sets*(evicted.second)+index;
             WriteL2(evicted_memoryblock);
         }
