@@ -39,6 +39,139 @@ void construct_traces(std::ifstream &file) {
     file.close();
 }
 
+ll BLOCKSIZE,L1_Size,L2_Size,L1_Assoc,L2_Assoc; //the paramters of caches
+ll L1time=1,L2time=20,Memorytime=200; //access times
+
+//we represent the caches by a vector of vectors and tags by a vector of vector of pairs where the first entry is the dirty bit
+vector<vector<ll>> L1Cache;
+vector<vector<pair<bool,ll>>> L1Tag;
+vector<vector<ll>> L2Cache;
+vector<vector<pair<bool,ll>>> L2Tag;
+
+ll L1ReadHit=0,L1ReadMiss=0,L2ReadHit=0,L2ReadMiss=0;
+ll L1WriteHit=0,L1WriteMiss=0,L2WriteHit=0,L2WriteMiss=0;
+ll MemoryRead=0,MemoryWrite=0;
+
+//function prototypes
+ll MemoryBlock(ll byte);
+ll L1set(ll blockindex);
+ll L2set(ll blockindex);
+ll L1tag(ll blockindex);
+ll L2tag(ll blockindex);
+void MemoryAccess(ll blockindex);
+void WriteL2(ll memoryblock);
+void ReadL2(ll memoryblock);
+void addL2(ll memoryblock)
+void WriteL1(ll memoryblock);
+void ReadL1(ll memoryblock);
+void addL1(ll memoryblock)
+
+
+//cache functions start from here
+ll MemoryBlock(ll byte)
+{
+    return byte/BLOCKSIZE;
+}
+ll L1set(ll blockindex)
+{
+    return blockindex%L1_Size;
+}
+ll L2set(ll blockindex)
+{
+    return blockindex%L2_Size;
+}
+ll L1tag(ll blockindex)
+{
+    return blockindex/L1_Size;
+}
+ll L2tag(ll blockindex)
+{
+    return blockindex/L2_Size;
+}
+
+void WriteMemory(ll memoryblock)
+{
+
+}
+void ReadMemory(ll memoryblock)
+{
+    MemoryRead=MemoryRead+1;
+    AddL2(memoryblock);
+    AddL1(memoryblock);
+}
+
+void WriteL2(ll memoryblock)
+{
+
+}
+
+void ReadL2(ll memoryblock)
+{
+    ll index=L2set(memoryblock);
+    ll tag=L2tag(memoryblock);
+    bool Hit=false;
+    for(ll j=0;j<(int)L2Tag[index].size();j++) //L2Tag[index].size() can be atmost L2_Assoc
+    {
+        //comparing tag entries with tag of memoryblock
+        if(L2Tag[index][j]==tag)
+        {
+            Hit=true;
+            break;
+        }
+    }
+    if(Hit)
+    {
+        L2ReadHit=L2ReadHit+1;
+        return;
+    }
+    //so there was no tag of memoryblock in L1Tag,increment L1ReadMiss and go to L2
+    L2ReadMiss=L2ReadMiss+1;
+    ReadMemory(memoryblock);   
+}
+
+void AddL2(ll memoryblock)
+{
+    //so we are sure that this block is not there in L1 cache
+    ll index=L2set(memoryblock);
+    bool Evict=false;
+    
+}
+
+void WriteL1(ll memoryblock)
+{
+
+}
+
+void ReadL1(ll memoryblock)
+{
+    ll index=L1set(memoryblock);
+    ll tag=L1tag(memoryblock);
+    bool Hit=false;
+    for(ll j=0;j<(int)L1Tag[index].size();j++) //L1Tag[index].size() can be atmost L1_Assoc
+    {
+        //comparing tag entries with tag of memoryblock
+        if(L1Tag[index][j]==tag)
+        {
+            Hit=true;
+            break;
+        }
+    }
+    if(Hit)
+    {
+        L1ReadHit=L1ReadHit+1;
+        return;
+    }
+    //so there was no tag of memoryblock in L1Tag,increment L1ReadMiss and go to L2
+    L1ReadMiss=L1ReadMiss+1;
+    ReadL2(memoryblock);
+}
+
+void AddL1(ll memoryblock)
+{
+
+}
+
+
 
 int main (int argc, char *argv[]) {
     // if (argc != 7) {
@@ -51,11 +184,11 @@ int main (int argc, char *argv[]) {
     // int L2_Size = argv[4];
     // int L2_Assoc = argv[5];
     // string filename = argv[6];
-    ll BLOCKSIZE = 64;
-    ll L1_Size = 1024;
-    ll L1_Assoc = 2;
-    ll L2_Size = 65536;
-    ll L2_Assoc = 8;
+    BLOCKSIZE = 64;
+    L1_Size = 1024;
+    L1_Assoc = 2;
+    L2_Size = 65536;
+    L2_Assoc = 8;
     string filename = "memory_trace_files/trace1.txt";
     ifstream file(filename);
     if (file.is_open()) {
@@ -64,6 +197,17 @@ int main (int argc, char *argv[]) {
     } else {
         cerr << "File could not be opened. Terminating...\n";
         return 1;
+    }
+
+    //code starts from here
+    L1Cache.resize(L1Size),L1Tag.resize(L1Size);
+    L2Cache.resize(L2Size); L2Tag.resize(L2Size);
+
+    for(ll i=0;i<(ll)traces.size();i++)
+    {
+        ll memoryblock=MemoryBlock(traces[i].second);
+        if(traces[i].first == 'r') ReadL1(memoryblock);
+        else WriteL1(memoryblock);
     }
 
     return 0;
