@@ -159,9 +159,13 @@ void ReadL2(ll memoryblock)
         L2Tag[index]=tempTag;
         AddL1(memoryblock);
     }
-    //so there was no tag of memoryblock in L1Tag,increment L2ReadMiss and go to main memory
-    L2ReadMiss=L2ReadMiss+1;
-    ReadMemorytoBoth(memoryblock);   
+
+    else
+    {
+        //so there was no tag of memoryblock in L1Tag,increment L2ReadMiss and go to main memory
+        L2ReadMiss=L2ReadMiss+1;
+        ReadMemorytoBoth(memoryblock);
+    }   
 }
 
 void AddL2(ll memoryblock)
