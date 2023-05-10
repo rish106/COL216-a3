@@ -1,11 +1,4 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
-#include <cmath>
-#include <iomanip>
-#include <fstream>
-#include <boost/tokenizer.hpp>
+#include "a3.hpp"
 
 typedef long long ll;
 
@@ -26,7 +19,7 @@ void parse_trace(std::string line) {
             address = stoll("0x" + *it, &sz, 0);
         }
     }
-    cout << instruction << ' ' << address << '\n';
+    // cout << instruction << ' ' << address << '\n';
     traces.push_back(make_pair(instruction, address));
 }
 
@@ -53,24 +46,6 @@ ll WriteBackFromL1=0,WriteBackFromL2=0;
 ll L1update=0,L2update=0;
 ll MemoryRead=0,MemoryWrite=0;
 
-//function prototypes
-ll MemoryBlock(ll byte);
-ll L1set(ll blockindex);
-ll L2set(ll blockindex);
-ll L1tag(ll blockindex);
-ll L2tag(ll blockindex);
-void WriteMemory(ll blockindex);
-void ReadMemorytoBoth(ll memoryblock);
-void ReadMemoryToL2(ll memoryblock);
-void WriteL2(ll memoryblock);
-void ReadL2(ll memoryblock);
-void AddL2(ll memoryblock)
-void WriteL1(ll memoryblock);
-void ReadL1(ll memoryblock);
-void AddL1(ll memoryblock);
-
-
-//cache functions start from here
 ll MemoryBlock(ll byte)
 {
     return byte/BLOCKSIZE;
@@ -124,13 +99,13 @@ void WriteL2(ll memoryblock)
         }
     }
     if(Hit == true)
-    {
-        L2WriteHit=L2WriteHit+1;
-    }
+        {
+            L2WriteHit=L2WriteHit+1;
+        }
     else
     {
         L2WriteMiss=L2WriteMiss+1;
-        ReadMemorytoL2(memoryblock);
+        ReadMemoryToL2(memoryblock);
 
         //so make sure that the dirty bit of memoryblock is turned on, because ReadMemorytoL2 calls AddL2 and AddL2 doesnt change any
         //block's dirty bit. Basically write on the block after bringing it in the L2 cache
@@ -176,24 +151,24 @@ void AddL2(ll memoryblock)
     ll index=L2set(memoryblock);
     ll tag=L2tag(memoryblock);
     if((ll) L2Tag[index].size() == L2_Assoc)
-    {
-        //so eviction needs to be done
-        pair<bool,ll> evicted;
-        vector<pair<bool,ll>> tempTag;
-        //now using the LRU policy
-        for(ll j=1;j<(ll)L2Tag[index].size();j++) tempTag.push_back(L2Tag[index][j]);
-        tempTag.push_back({false,tag});
-        evicted=L2Tag[index][0];
-        L2Tag[index]=tempTag;
-
-        if(evicted.first == true)
         {
-            //dirty bit is on
-            WriteBackFromL2=WriteBackFromL2+1;
-            ll evicted_memoryblock=L2Sets*evicted.second+index;
-            WriteMemory(evicted_memoryblock);
+            //so eviction needs to be done
+            pair<bool,ll> evicted;
+            vector<pair<bool,ll>> tempTag;
+            //now using the LRU policy
+            for(ll j=1;j<(ll)L2Tag[index].size();j++) tempTag.push_back(L2Tag[index][j]);
+            tempTag.push_back({false,tag});
+            evicted=L2Tag[index][0];
+            L2Tag[index]=tempTag;
+
+            if(evicted.first == true)
+            {
+                //dirty bit is on
+                WriteBackFromL2=WriteBackFromL2+1;
+                ll evicted_memoryblock=L2Sets*evicted.second+index;
+                WriteMemory(evicted_memoryblock);
+            }
         }
-    }
 
     else
     {
@@ -219,9 +194,9 @@ void WriteL1(ll memoryblock)
     }
 
     if(Hit == true)
-    {
-        L1WriteHit=L1WriteHit+1;
-    }
+        {
+            L1WriteHit=L1WriteHit+1;
+        }
     else
     {
         L1WriteMiss=L1WriteMiss+1;
@@ -253,9 +228,9 @@ void ReadL1(ll memoryblock)
         }
     }
     if(Hit)
-    {
-        L1ReadHit=L1ReadHit+1;
-    }
+        {
+            L1ReadHit=L1ReadHit+1;
+        }
     else
     {
         //so there was no tag of memoryblock in L1Tag,increment L1ReadMiss and go to L2
@@ -271,24 +246,24 @@ void AddL1(ll memoryblock)
     ll index=L1set(memoryblock);
     ll tag=L1tag(memoryblock);
     if((ll) L1Tag[index].size() == L1_Assoc)
-    {
-        //so eviction needs to be done as all ways are filled
-        pair<bool,ll> evicted;
-        vector<pair<bool,ll>> tempTag;
-        //now using the LRU policy
-        for(ll j=1;j<(ll)L1Tag[index].size();j++) tempTag.push_back(L1Tag[index][j]);
-        tempTag.push_back({false,tag});
-        evicted=L1Tag[index][0];
-        L1Tag[index]=tempTag;
-
-        if(evicted.first == true)
         {
-            //dirty bit is on
-            WriteBackFromL1=WriteBackFromL1+1;
-            ll evicted_memoryblock=L1Sets*(evicted.second)+index;
-            WriteL2(evicted_memoryblock);
+            //so eviction needs to be done as all ways are filled
+            pair<bool,ll> evicted;
+            vector<pair<bool,ll>> tempTag;
+            //now using the LRU policy
+            for(ll j=1;j<(ll)L1Tag[index].size();j++) tempTag.push_back(L1Tag[index][j]);
+            tempTag.push_back({false,tag});
+            evicted=L1Tag[index][0];
+            L1Tag[index]=tempTag;
+
+            if(evicted.first == true)
+            {
+                //dirty bit is on
+                WriteBackFromL1=WriteBackFromL1+1;
+                ll evicted_memoryblock=L1Sets*(evicted.second)+index;
+                WriteL2(evicted_memoryblock);
+            }
         }
-    }
 
     else
     {
@@ -296,7 +271,6 @@ void AddL1(ll memoryblock)
         L1Tag[index].push_back({false,tag});
     }
 }
-
 
 
 int main (int argc, char *argv[]) {
@@ -337,6 +311,24 @@ int main (int argc, char *argv[]) {
         if(traces[i].first == 'r') ReadL1(memoryblock);
         else WriteL1(memoryblock);
     }
+    ll L1Reads = L1ReadHit + L1ReadMiss;
+    ll L1Writes = L1WriteHit + L1WriteMiss;
+    ll L2Reads = L2ReadHit + L2ReadMiss;
+    ll L2Writes = L2WriteHit + L2WriteMiss;
+    cout << "l1 sets : " << L1Sets << '\n';
+    cout << "l2 sets : " << L2Sets << '\n';
+    cout << "number of L1 reads : " << L1Reads << '\n';
+    cout << "number of L1 read misses : " << L1ReadMiss << '\n';
+    cout << "number of L1 writes : " << L1Writes << '\n';
+    cout << "number of L1 write misses : " << L1WriteMiss << '\n';
+    cout << "L1 miss rate : " << float(L1ReadMiss + L1WriteMiss)/float(L1Reads + L1Writes) << '\n';
+    cout << "number of writebacks from L1 : " << WriteBackFromL1 << '\n';
+    cout << "number of L2 reads : " << L2Reads << '\n';
+    cout << "number of L2 read misses : " << L2ReadMiss << '\n';
+    cout << "number of L2 writes : " << L2Writes << '\n';
+    cout << "number of L2 write misses : " << L2WriteMiss << '\n';
+    cout << "L2 miss rate : " << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
+    cout << "number of writebacks from L2 : " << WriteBackFromL2 << '\n';
 
     L1Tag.clear();
     L2Tag.clear();
