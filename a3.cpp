@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <fstream>
 #include <boost/tokenizer.hpp>
+#include "a3.hpp"
 
 typedef long long ll;
 
@@ -52,23 +53,6 @@ ll L1WriteHit=0,L1WriteMiss=0,L2WriteHit=0,L2WriteMiss=0;
 ll WriteBackFromL1=0,WriteBackFromL2=0;
 ll L1update=0,L2update=0;
 ll MemoryRead=0,MemoryWrite=0;
-
-//function prototypes
-ll MemoryBlock(ll byte);
-ll L1set(ll blockindex);
-ll L2set(ll blockindex);
-ll L1tag(ll blockindex);
-ll L2tag(ll blockindex);
-void WriteMemory(ll blockindex);
-void ReadMemorytoBoth(ll memoryblock);
-void ReadMemoryToL2(ll memoryblock);
-void WriteL2(ll memoryblock);
-void ReadL2(ll memoryblock);
-void AddL2(ll memoryblock)
-void WriteL1(ll memoryblock);
-void ReadL1(ll memoryblock);
-void AddL1(ll memoryblock);
-
 
 //cache functions start from here
 ll MemoryBlock(ll byte)
@@ -364,18 +348,18 @@ int main (int argc, char *argv[]) {
     ll L2Writes = L2WriteHit + L2WriteMiss;
     cout << "l1 sets : " << L1Sets << '\n';
     cout << "l2 sets : " << L2Sets << '\n';
-    cout << "number of L1 reads : " << L1Reads << '\n';
-    cout << "number of L1 read misses : " << L1ReadMiss << '\n';
-    cout << "number of L1 writes : " << L1Writes << '\n';
-    cout << "number of L1 write misses : " << L1WriteMiss << '\n';
-    cout << "L1 miss rate : " << float(L1ReadMiss + L1WriteMiss)/float(L1Reads + L1Writes) << '\n';
-    cout << "number of writebacks from L1 : " << WriteBackFromL1 << '\n';
-    cout << "number of L2 reads : " << L2Reads << '\n';
-    cout << "number of L2 read misses : " << L2ReadMiss << '\n';
-    cout << "number of L2 writes : " << L2Writes << '\n';
-    cout << "number of L2 write misses : " << L2WriteMiss << '\n';
-    cout << "L2 miss rate : " << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
-    cout << "number of writebacks from L2 : " << WriteBackFromL2 << '\n';
+    cout << "i. number of L1 reads : " << L1Reads << '\n';
+    cout << "ii. number of L1 read misses : " << L1ReadMiss << '\n';
+    cout << "iii. number of L1 writes : " << L1Writes << '\n';
+    cout << "iv. number of L1 write misses : " << L1WriteMiss << '\n';
+    cout << "v. L1 miss rate : " << float(L1ReadMiss + L1WriteMiss)/float(L1Reads + L1Writes) << '\n';
+    cout << "vi. number of writebacks from L1 : " << WriteBackFromL1 << '\n';
+    cout << "vii. number of L2 reads : " << L2Reads << '\n';
+    cout << "viii. number of L2 read misses : " << L2ReadMiss << '\n';
+    cout << "ix. number of L2 writes : " << L2Writes << '\n';
+    cout << "x. number of L2 write misses : " << L2WriteMiss << '\n';
+    cout << "xi. L2 miss rate : " << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
+    cout << "xii. number of writebacks from L2 : " << WriteBackFromL2 << '\n';
 
     L1Tag.clear();
     L2Tag.clear();
