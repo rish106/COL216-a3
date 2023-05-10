@@ -1,4 +1,11 @@
-#include "a3.hpp"
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <fstream>
+#include <boost/tokenizer.hpp>
 
 typedef long long ll;
 
@@ -46,6 +53,24 @@ ll WriteBackFromL1=0,WriteBackFromL2=0;
 ll L1update=0,L2update=0;
 ll MemoryRead=0,MemoryWrite=0;
 
+//function prototypes
+ll MemoryBlock(ll byte);
+ll L1set(ll blockindex);
+ll L2set(ll blockindex);
+ll L1tag(ll blockindex);
+ll L2tag(ll blockindex);
+void WriteMemory(ll blockindex);
+void ReadMemorytoBoth(ll memoryblock);
+void ReadMemoryToL2(ll memoryblock);
+void WriteL2(ll memoryblock);
+void ReadL2(ll memoryblock);
+void AddL2(ll memoryblock)
+void WriteL1(ll memoryblock);
+void ReadL1(ll memoryblock);
+void AddL1(ll memoryblock);
+
+
+//cache functions start from here
 ll MemoryBlock(ll byte)
 {
     return byte/BLOCKSIZE;
@@ -60,11 +85,11 @@ ll L2set(ll blockindex)
 }
 ll L1tag(ll blockindex)
 {
-    return blockindex/L1Sets;
+    return (blockindex-blockindex%L1Sets)/L1Sets;
 }
 ll L2tag(ll blockindex)
 {
-    return blockindex/L2Sets;
+    return (blockindex-blockindex%L2Sets)/L2Sets;
 }
 
 void WriteMemory(ll memoryblock)
@@ -89,19 +114,24 @@ void WriteL2(ll memoryblock)
     ll index=L2set(memoryblock);
     ll tag=L2tag(memoryblock);
     bool Hit=false;
+    pair<bool,ll> target;
+    vector<pair<bool,ll>> tempTag;
     for(ll j=0;j<(ll)L2Tag[index].size();j++)
     {
         if(L2Tag[index][j].second == tag)
         {
             Hit=true;
             L2Tag[index][j].first=true;
-            break;
+            target=L2Tag[index][j];
         }
+        else tempTag.push_back(L2Tag[index][j]);
     }
     if(Hit == true)
-        {
-            L2WriteHit=L2WriteHit+1;
-        }
+    {
+        L2WriteHit=L2WriteHit+1;
+        tempTag.push_back(target);
+        L2Tag[index]=tempTag;
+    }
     else
     {
         L2WriteMiss=L2WriteMiss+1;
@@ -109,6 +139,7 @@ void WriteL2(ll memoryblock)
 
         //so make sure that the dirty bit of memoryblock is turned on, because ReadMemorytoL2 calls AddL2 and AddL2 doesnt change any
         //block's dirty bit. Basically write on the block after bringing it in the L2 cache
+        //the block would be at the back of L2Tag[index] anyways
         for(ll j=0;j<(ll)L2Tag[index].size();j++)
         {
             if(L2Tag[index][j].second == tag)
@@ -125,21 +156,26 @@ void ReadL2(ll memoryblock)
     ll index=L2set(memoryblock);
     ll tag=L2tag(memoryblock);
     bool Hit=false;
+    pair<bool,ll> target;
+    vector<pair<bool,ll>> tempTag;
     for(ll j=0;j<(ll)L2Tag[index].size();j++) //L2Tag[index].size() can be atmost L2_Assoc
     {
         //comparing tag entries with tag of memoryblock
         if(L2Tag[index][j].second == tag)
         {
             Hit=true;
-            break;
+            target=L2Tag[index][j];
         }
+        else tempTag.push_back(L2Tag[index][j]);
     }
     if(Hit == true)
     {
         L2ReadHit=L2ReadHit+1;
+        tempTag.push_back(target);
+        L2Tag[index]=tempTag;
         AddL1(memoryblock);
     }
-    //so there was no tag of memoryblock in L1Tag,increment L1ReadMiss and go to L2
+    //so there was no tag of memoryblock in L1Tag,increment L2ReadMiss and go to main memory
     L2ReadMiss=L2ReadMiss+1;
     ReadMemorytoBoth(memoryblock);   
 }
@@ -151,24 +187,24 @@ void AddL2(ll memoryblock)
     ll index=L2set(memoryblock);
     ll tag=L2tag(memoryblock);
     if((ll) L2Tag[index].size() == L2_Assoc)
-        {
-            //so eviction needs to be done
-            pair<bool,ll> evicted;
-            vector<pair<bool,ll>> tempTag;
-            //now using the LRU policy
-            for(ll j=1;j<(ll)L2Tag[index].size();j++) tempTag.push_back(L2Tag[index][j]);
-            tempTag.push_back({false,tag});
-            evicted=L2Tag[index][0];
-            L2Tag[index]=tempTag;
+    {
+        //so eviction needs to be done
+        pair<bool,ll> evicted;
+        vector<pair<bool,ll>> tempTag;
+        //now using the LRU policy
+        for(ll j=1;j<(ll)L2Tag[index].size();j++) tempTag.push_back(L2Tag[index][j]);
+        tempTag.push_back({false,tag});
+        evicted=L2Tag[index][0];
+        L2Tag[index]=tempTag;
 
-            if(evicted.first == true)
-            {
-                //dirty bit is on
-                WriteBackFromL2=WriteBackFromL2+1;
-                ll evicted_memoryblock=L2Sets*evicted.second+index;
-                WriteMemory(evicted_memoryblock);
-            }
+        if(evicted.first == true)
+        {
+            //dirty bit is on
+            WriteBackFromL2=WriteBackFromL2+1;
+            ll evicted_memoryblock=L2Sets*evicted.second+index;
+            WriteMemory(evicted_memoryblock);
         }
+    }
 
     else
     {
@@ -182,6 +218,8 @@ void WriteL1(ll memoryblock)
     ll index=L1set(memoryblock);
     ll tag=L1tag(memoryblock);
     bool Hit=false;
+    pair<bool,ll> target;
+    vector<pair<bool,ll>> tempTag;
 
     for(ll j=0;j<(ll)L1Tag[index].size();j++)
     {
@@ -189,19 +227,23 @@ void WriteL1(ll memoryblock)
         {
             Hit=true;
             L1Tag[index][j].first=true;
-            break;
+            target=L1Tag[index][j];
         }
+        else tempTag.push_back(L1Tag[index][j]);
     }
 
     if(Hit == true)
-        {
-            L1WriteHit=L1WriteHit+1;
-        }
+    {
+        L1WriteHit=L1WriteHit+1;
+        tempTag.push_back(target);
+        L1Tag[index]=tempTag;
+    }
     else
     {
         L1WriteMiss=L1WriteMiss+1;
         ReadL2(memoryblock);
         //now turn the dirty bit of memoryblock on,basically write on the block that is brough into L1
+        //the block would be at the back of L1Tag[index]
         for(ll j=0;j<(ll)L1Tag[index].size();j++)
         {
             if(L1Tag[index][j].second == tag)
@@ -218,19 +260,24 @@ void ReadL1(ll memoryblock)
     ll index=L1set(memoryblock);
     ll tag=L1tag(memoryblock);
     bool Hit=false;
+    pair<bool,ll> target;
+    vector<pair<bool,ll>> tempTag;
     for(ll j=0;j<(ll)L1Tag[index].size();j++) //L1Tag[index].size() can be atmost L1_Assoc
     {
         //comparing tag entries with tag of memoryblock
         if(L1Tag[index][j].second == tag)
         {
             Hit=true;
-            break;
+            target=L1Tag[index][j];
         }
+        else tempTag.push_back(L1Tag[index][j]);
     }
     if(Hit)
-        {
-            L1ReadHit=L1ReadHit+1;
-        }
+    {
+        L1ReadHit=L1ReadHit+1;
+        tempTag.push_back(target);
+        L1Tag[index]=tempTag;
+    }
     else
     {
         //so there was no tag of memoryblock in L1Tag,increment L1ReadMiss and go to L2
@@ -246,24 +293,24 @@ void AddL1(ll memoryblock)
     ll index=L1set(memoryblock);
     ll tag=L1tag(memoryblock);
     if((ll) L1Tag[index].size() == L1_Assoc)
-        {
-            //so eviction needs to be done as all ways are filled
-            pair<bool,ll> evicted;
-            vector<pair<bool,ll>> tempTag;
-            //now using the LRU policy
-            for(ll j=1;j<(ll)L1Tag[index].size();j++) tempTag.push_back(L1Tag[index][j]);
-            tempTag.push_back({false,tag});
-            evicted=L1Tag[index][0];
-            L1Tag[index]=tempTag;
+    {
+        //so eviction needs to be done as all ways are filled
+        pair<bool,ll> evicted;
+        vector<pair<bool,ll>> tempTag;
+        //now using the LRU policy
+        for(ll j=1;j<(ll)L1Tag[index].size();j++) tempTag.push_back(L1Tag[index][j]);
+        tempTag.push_back({false,tag});
+        evicted=L1Tag[index][0];
+        L1Tag[index]=tempTag;
 
-            if(evicted.first == true)
-            {
-                //dirty bit is on
-                WriteBackFromL1=WriteBackFromL1+1;
-                ll evicted_memoryblock=L1Sets*(evicted.second)+index;
-                WriteL2(evicted_memoryblock);
-            }
+        if(evicted.first == true)
+        {
+            //dirty bit is on
+            WriteBackFromL1=WriteBackFromL1+1;
+            ll evicted_memoryblock=L1Sets*(evicted.second)+index;
+            WriteL2(evicted_memoryblock);
         }
+    }
 
     else
     {
