@@ -17,9 +17,11 @@ void ReadMemoryToL2(ll memoryblock);
 void WriteL2(ll memoryblock);
 void ReadL2(ll memoryblock);
 void AddL2(ll memoryblock);
+void EvictL2(ll memoryblock);
 void WriteL1(ll memoryblock);
 void ReadL1(ll memoryblock);
 void AddL1(ll memoryblock);
+void EvictL1(ll memoryblock);
 
 
 #endif

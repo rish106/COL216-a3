@@ -365,6 +365,13 @@ int main (int argc, char *argv[]) {
     cout << "xi. L2 miss rate : " << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
     cout << "xii. number of writebacks from L2 : " << WriteBackFromL2 << '\n';
 
+    ll L1_time_taken = (L1ReadHit+L1ReadMiss+L1WriteHit+L1WriteMiss+L1update)*L1time;
+    ll L2_time_taken = (L2ReadHit+L2ReadMiss+L2WriteHit+L2WriteMiss+L2update)*L2time;
+    ll Memory_time_taken = (MemoryRead+MemoryWrite)*Memorytime;
+
+    ll Total_time_taken = (L1_time_taken + L2_time_taken + Memory_time_taken);
+
+    cout<< "xiii. Total time taken : " << Total_time_taken<<'\n';
     L1Tag.clear();
     L2Tag.clear();
     return 0;
