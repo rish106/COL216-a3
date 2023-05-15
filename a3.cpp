@@ -27,7 +27,6 @@ void parse_trace(std::string line) {
             address = stoll("0x" + *it, &sz, 0);
         }
     }
-    // cout << instruction << ' ' << address << '\n';
     traces.push_back(make_pair(instruction, address));
 }
 
@@ -309,22 +308,16 @@ void AddL1(ll memoryblock)
 
 
 int main (int argc, char *argv[]) {
-    // if (argc != 7) {
-    //     cerr << "required arguments: blocksize, l1_size, l1_ssoc, l2_size, l2_assoc, filename\n";
-    //     return 1;
-    // }
-    // int BLOCKSIZE = argv[1];
-    // int L1_Size = argv[2];
-    // int L1_Assoc = argv[3];
-    // int L2_Size = argv[4];
-    // int L2_Assoc = argv[5];
-    // string filename = argv[6];
-    BLOCKSIZE = 64;
-    L1_Size = 1024;
-    L1_Assoc = 2;
-    L2_Size = 65536;
-    L2_Assoc = 8;
-    string filename = "memory_trace_files/trace1.txt";
+    if (argc != 7) {
+        cerr << "required arguments: blocksize, l1_size, l1_ssoc, l2_size, l2_assoc, filename\n";
+        return 1;
+    }
+    BLOCKSIZE = stoll(argv[1], &sz, 0);
+    L1_Size = stoll(argv[2], &sz, 0);
+    L1_Assoc = stoll(argv[3], &sz, 0);
+    L2_Size = stoll(argv[4], &sz, 0);
+    L2_Assoc = stoll(argv[5], &sz, 0);
+    string filename = argv[6];
     ifstream file(filename);
     if (file.is_open()) {
         // do caching
@@ -350,19 +343,17 @@ int main (int argc, char *argv[]) {
     ll L1Writes = L1WriteHit + L1WriteMiss;
     ll L2Reads = L2ReadHit + L2ReadMiss;
     ll L2Writes = L2WriteHit + L2WriteMiss;
-    cout << "l1 sets : " << L1Sets << '\n';
-    cout << "l2 sets : " << L2Sets << '\n';
     cout << "i. number of L1 reads : " << L1Reads << '\n';
     cout << "ii. number of L1 read misses : " << L1ReadMiss << '\n';
     cout << "iii. number of L1 writes : " << L1Writes << '\n';
     cout << "iv. number of L1 write misses : " << L1WriteMiss << '\n';
-    cout << "v. L1 miss rate : " << float(L1ReadMiss + L1WriteMiss)/float(L1Reads + L1Writes) << '\n';
+    cout << "v. L1 miss rate : " << fixed << setprecision(4) << float(L1ReadMiss + L1WriteMiss)/float(L1Reads + L1Writes) << '\n';
     cout << "vi. number of writebacks from L1 : " << WriteBackFromL1 << '\n';
     cout << "vii. number of L2 reads : " << L2Reads << '\n';
     cout << "viii. number of L2 read misses : " << L2ReadMiss << '\n';
     cout << "ix. number of L2 writes : " << L2Writes << '\n';
     cout << "x. number of L2 write misses : " << L2WriteMiss << '\n';
-    cout << "xi. L2 miss rate : " << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
+    cout << "xi. L2 miss rate : " << fixed << setprecision(4) << float(L2ReadMiss + L2WriteMiss)/float(L2Reads + L2Writes) << '\n';
     cout << "xii. number of writebacks from L2 : " << WriteBackFromL2 << '\n';
 
     ll L1_time_taken = (L1ReadHit+L1ReadMiss+L1WriteHit+L1WriteMiss+L1update)*L1time;
@@ -371,7 +362,8 @@ int main (int argc, char *argv[]) {
 
     ll Total_time_taken = (L1_time_taken + L2_time_taken + Memory_time_taken);
 
-    cout<< "xiii. Total time taken : " << Total_time_taken<<'\n';
+    cout << "xiii. total access time(in nanoseconds) : " << Total_time_taken << '\n';
+
     L1Tag.clear();
     L2Tag.clear();
     return 0;

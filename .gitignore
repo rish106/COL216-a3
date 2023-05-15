@@ -33,4 +33,6 @@
 
 memory_trace_files/
 memory_trace_files.tar.gz
-outputs/
+
+# mac moment
+.DS_Store
